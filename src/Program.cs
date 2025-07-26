@@ -7,8 +7,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
-
-
 #if !NET48
 using System.Runtime.Loader;
 #endif
@@ -251,10 +249,6 @@ static class Program
         var files = Directory.GetFiles(directory, "*.csproj", SearchOption.TopDirectoryOnly);
         return files.FirstOrDefault();
     }
-
-
-
-
 
     private static object LoadModel(string moduleDllPath, string modelPath)
     {

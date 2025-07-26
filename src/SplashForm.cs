@@ -32,6 +32,7 @@ public partial class SplashForm : Form
             exitButton.Visible = true;
             return;
         }
+        DialogResult = DialogResult.OK;
         Close();
     }
 
