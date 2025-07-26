@@ -44,4 +44,7 @@ Contributions are welcome! Please follow these steps:
 This project is licensed under the [MIT License](LICENSE).
 
 ## Contact
-For questions or support, please contact [xafsame@sendev.de].
+
+If you have questions, need support, or want to report a bug or request a feature, please **[open an issue](https://github.com/SenDevGmbH/XafSame/issues)** in the GitHub repository first - this helps us keep track of everything and benefit the whole community.
+
+For other matters, feel free to reach out via email at [xafsame@sendev.de](mailto:xafsame@sendev.de).
