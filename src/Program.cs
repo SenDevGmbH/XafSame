@@ -22,6 +22,7 @@ static class Program
     private static string? devExpressVersion;
     private static AssemblyHelper? assemblyHelper;
     private static ILogger? logger;
+    private const string DisclaimerAcknowledgedFile = "disclaimer_acknowledged.txt";
 
     /// <summary>
     ///  The main entry point for the application.
@@ -32,8 +33,32 @@ static class Program
 #if !NET48
         ApplicationConfiguration.Initialize();
 #endif
+        if (!IsDisclaimerAcknowledged())
+        {
+            ShowDisclaimerDialog();
+        }
+
+        if (args.Length == 0)
+        {
+            MessageBox.Show("Please provide the model differences file as an argument.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        string modelDifferencesFileName = args[0];
+        if (!File.Exists(modelDifferencesFileName))
+        {
+            MessageBox.Show($"Model differences file '{args[0]}' does not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
         Form? modelEditorForm = null;
-        var splashFrom = new SplashForm(() => modelEditorForm = CreateModelEditorForm(args[0]));
+        var splashFrom = new SplashForm(() =>
+        {
+            
+            modelEditorForm = CreateModelEditorForm(modelDifferencesFileName);
+        });
+
+
         logger = splashFrom.Logger;
 
         if (splashFrom.ShowDialog() != DialogResult.OK)
@@ -41,6 +66,26 @@ static class Program
             return;
         }
         Application.Run(modelEditorForm!);
+    }
+
+    private static bool IsDisclaimerAcknowledged()
+    {
+        return File.Exists(DisclaimerAcknowledgedFile);
+    }
+
+    private static void ShowDisclaimerDialog()
+    {
+        using (var disclaimerForm = new DisclaimerForm())
+        {
+            if (disclaimerForm.ShowDialog() == DialogResult.OK)
+            {
+                File.WriteAllText(DisclaimerAcknowledgedFile, "Acknowledged");
+            }
+            else
+            {
+                Environment.Exit(0);
+            }
+        }
     }
 
     private static void StartModelEditor(string modelDifferencesFileName)
