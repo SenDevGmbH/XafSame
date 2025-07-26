@@ -1,6 +1,5 @@
 <Project>
  <PropertyGroup>
-    <DevExpressPackageVersion>21.2.4.215</DevExpressPackageVersion>
     <AssemblyVersion>0.0.2</AssemblyVersion>
  </PropertyGroup>
 </Project>
