@@ -1,0 +1,73 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+    # Checkout the repository
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+
+    # Restore dependencies and build for .NET 9
+    - name: Build for .NET 9
+      run: |
+        dotnet restore
+        dotnet publish src\SenDev.XafSame.csproj -c Release -f net9.0-windows -o output/netcore
+
+    # Restore dependencies and build for .NET Framework 4.8
+    - name: Build for .NET Framework 4.8
+      run: |
+        dotnet publish src\SenDev.XafSame.csproj -c Release -f net48 -o output/net48
+
+    # Generate semantic version
+    - name: Generate semantic version
+      id: version
+      uses: paulhatch/semantic-version@v3
+      with:
+        branch: ${{ github.ref_name }}
+
+    # Tag the current version
+    - name: Tag current version
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git tag -a v${{ steps.version.outputs.version }} -m "Release version ${{ steps.version.outputs.version }}"
+        git push origin v${{ steps.version.outputs.version }}
+
+    # Create zip archive
+    - name: Create zip archive
+      run: |
+        mkdir -p artifacts
+        Compress-Archive -Path output\* -DestinationPath artifacts/sendev.xafsame_${{ steps.version.outputs.version }}.zip
+        
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        release_name: Release ${{ steps.version.outputs.version }}
+        draft: true
+        prerelease: true
+
+    # Publish to GitHub Releases
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/sendev.xafsame_${{ steps.version.outputs.version }}.zip
+        asset_name: sendev.xafsame_${{ steps.version.outputs.version }}.zip
+        asset_content_type: application/zip
