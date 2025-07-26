@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 
@@ -18,11 +19,15 @@ static class Program
 {
     private const string DevExpressExpressAppWinPattern = "DevExpress.ExpressApp.Win.v{0}";
     private const string DevExpressExpressAppPattern = "DevExpress.ExpressApp.v{0}";
+    private const string disclaimerAcknowledgedFileName = "disclaimer_acknowledged.txt";
+
     private static readonly List<string> referenceFiles = new List<string>();
     private static string? devExpressVersion;
     private static AssemblyHelper? assemblyHelper;
     private static ILogger? logger;
-    private const string DisclaimerAcknowledgedFile = "disclaimer_acknowledged.txt";
+    private static readonly string applicationDataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "SenDevGmbH", "XafSame");
+
+    private static readonly string disclaimerAcknowledgedFile = Path.Combine(applicationDataDirectory, disclaimerAcknowledgedFileName);
 
     /// <summary>
     ///  The main entry point for the application.
@@ -54,7 +59,7 @@ static class Program
         Form? modelEditorForm = null;
         var splashFrom = new SplashForm(() =>
         {
-            
+
             modelEditorForm = CreateModelEditorForm(modelDifferencesFileName);
         });
 
@@ -68,9 +73,10 @@ static class Program
         Application.Run(modelEditorForm!);
     }
 
+
     private static bool IsDisclaimerAcknowledged()
     {
-        return File.Exists(DisclaimerAcknowledgedFile);
+        return File.Exists(disclaimerAcknowledgedFile);
     }
 
     private static void ShowDisclaimerDialog()
@@ -79,7 +85,11 @@ static class Program
         {
             if (disclaimerForm.ShowDialog() == DialogResult.OK)
             {
-                File.WriteAllText(DisclaimerAcknowledgedFile, "Acknowledged");
+                if (!Directory.Exists(applicationDataDirectory))
+                {
+                    Directory.CreateDirectory(applicationDataDirectory);
+                }
+                File.WriteAllText(disclaimerAcknowledgedFile, "Acknowledged");
             }
             else
             {
