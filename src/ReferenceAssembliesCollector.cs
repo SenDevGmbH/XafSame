@@ -37,9 +37,13 @@ class ReferenceAssembliesCollector
         var outputPath = GetPropertyValue(evaluatedPropertiesFolder, "OutputPath");
         string? projectDirectory = Path.GetDirectoryName(ProjectPath) ?? throw new InvalidOperationException("Invalid project directory.");
         outputAssembly = Path.Combine(projectDirectory, outputPath ?? string.Empty, targetFileName);
-        var references = GetResolveLockFileReferences(build, ProjectFileName).ToList();
+        
+        var references = new List<string>();
 
-        foreach (var referenceFile in GetResolvedAssemblyReferences(build, ProjectFileName).Concat(GetResolvePackageAssetsReferences(build)))
+        foreach (var referenceFile in GetResolvedAssemblyReferences(build, ProjectFileName)
+            .Concat(GetResolveLockFileReferences(build, ProjectFileName))
+            .Concat(GetResolvePackageAssetsReferences(build))
+            .Concat(GetOutputFiles(Path.GetDirectoryName(outputAssembly))))
         {
             if (!references.Any(r => string.Equals(Path.GetFileName(r), Path.GetFileName(referenceFile), StringComparison.OrdinalIgnoreCase)))
             {
@@ -48,6 +52,15 @@ class ReferenceAssembliesCollector
         }
 
         return references.Select(GetRuntimeAssemblyPath);
+    }
+
+    private static IEnumerable<string> GetOutputFiles(string? outputPath)
+    {
+        if (outputPath == null)
+        {
+            return [];
+        }
+        return Directory.GetFiles(outputPath, "*.dll", SearchOption.TopDirectoryOnly);
     }
 
     private string GetTargetFileName() => GetTargetFileName(evaluatedPropertiesFolder);
@@ -199,11 +212,13 @@ class ReferenceAssembliesCollector
         var outputs = target.Children.OfType<Folder>().FirstOrDefault(c => c.Name == targetOutputsName);
         if (outputs == null)
         {
-            throw new Exception($"{targetOutputsName} element not found in {target.Name} target.");
+            return [];
         }
 
         return outputs.Children.OfType<Item>().Select(i => i.Name);
     }
+
+    
 
     private string? GetEvaluatedPropertyValue(string propertyName)
     {
